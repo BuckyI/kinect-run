@@ -50,7 +50,9 @@ class Visualizer:
         print("Saving capture...")
         time_prefix = time.strftime("%Y%m%d%H%M%S")
         _, depth = self.capture.get_depth_image()
-        depth_color_image = cv2.convertScaleAbs(depth)
+        depth_color_image = cv2.convertScaleAbs(
+            depth, alpha=0.05
+        )  # alpha is fitted by visual comparison with Azure k4aviewer results
         depth_color_image = cv2.applyColorMap(depth_color_image, cv2.COLORMAP_JET)
         cv2.imwrite(time_prefix + "_depth.png", depth_color_image)
 
