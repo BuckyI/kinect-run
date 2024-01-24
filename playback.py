@@ -40,24 +40,26 @@ class Visualizer:
         ret_d, depth_image = capture.get_depth_image()
         assert ret_c and ret_d, "capture is not valid"
 
+        # depth2rgb
+        # alpha is fitted by visual comparison with Azure k4aviewer results
+        depth_image = cv2.convertScaleAbs(depth_image, alpha=0.05)
+        depth_image = cv2.applyColorMap(depth_image, cv2.COLORMAP_JET)
+
         ax1, ax2 = self.axes
         ax1.cla(), ax2.cla()
         ax1.imshow(color_image[:, :, ::-1])  # bgr2rgb
-        ax2.imshow(depth_image, cmap="plasma")
+        ax2.imshow(depth_image[:, :, ::-1])
         self.fig.canvas.draw()
+
+        # cache image
+        self._depth_image = depth_image
+        self._color_image = color_image
 
     def save_capture(self):
         print("Saving capture...")
         time_prefix = time.strftime("%Y%m%d%H%M%S")
-        _, depth = self.capture.get_depth_image()
-        depth_color_image = cv2.convertScaleAbs(
-            depth, alpha=0.05
-        )  # alpha is fitted by visual comparison with Azure k4aviewer results
-        depth_color_image = cv2.applyColorMap(depth_color_image, cv2.COLORMAP_JET)
-        cv2.imwrite(time_prefix + "_depth.png", depth_color_image)
-
-        _, color_image = self.capture.get_color_image()
-        cv2.imwrite(time_prefix + "_color.png", color_image)
+        cv2.imwrite(time_prefix + "_depth.png", self._depth_image)
+        cv2.imwrite(time_prefix + "_color.png", self._color_image)
         print("Saving capture Done")
 
     def on_press(self, event):
