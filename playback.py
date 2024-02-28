@@ -1,7 +1,9 @@
 """
+回放 Kinect 录制的 mkv 视频
 use matplotlib playback recorded mkv video, and save frames
 use keyboard to control, see `on_press` for more info
 """
+
 import time
 
 import cv2
@@ -20,25 +22,30 @@ class Visualizer:
 
         # init plot
         self.fig, self.axes = plt.subplots(1, 2, figsize=(15, 5))
-        self.axes[0].set_axis_off(), self.axes[1].set_axis_off()
+        self.axes[0].set_axis_off()
+        self.axes[1].set_axis_off()
         self.fig.canvas.mpl_connect("key_press_event", self.on_press)
         self.update_capture()
         self.plot_capture()
         plt.show()
 
     def update_capture(self, reverse: bool = False):
-        if reverse:
-            res, self.capture = self.playback.get_previous_capture()
+        "update frames, reverse means previous frame"
+        update = self.playback.get_previous_capture if reverse else self.playback.update
+        res, capture = update()
+        if res:
+            assert capture is not None  # for type checker
+            self.capture = capture
         else:
-            res, self.capture = self.playback.update()
-        if not res:
             print("failed to update capture")
 
     def plot_capture(self):
+        "plot frames"
         capture: pykinect.Capture = self.capture
-        ret_c, color_image = capture.get_color_image()
-        ret_d, depth_image = capture.get_depth_image()
+        ret_c, color_image = capture.get_color_image()  # type: ignore
+        ret_d, depth_image = capture.get_depth_image()  # type: ignore
         assert ret_c and ret_d, "capture is not valid"
+        assert color_image is not None and depth_image is not None  # for type checker
 
         # depth2rgb
         # alpha is fitted by visual comparison with Azure k4aviewer results
@@ -46,7 +53,7 @@ class Visualizer:
         depth_image = cv2.applyColorMap(depth_image, cv2.COLORMAP_JET)
 
         ax1, ax2 = self.axes
-        ax1.cla(), ax2.cla()
+        ax1.cla(), ax2.cla()  # type: ignore
         ax1.imshow(color_image[:, :, ::-1])  # bgr2rgb
         ax2.imshow(depth_image[:, :, ::-1])
         self.fig.canvas.draw()
@@ -56,6 +63,7 @@ class Visualizer:
         self._color_image = color_image
 
     def save_capture(self):
+        "save current frame to local"
         print("Saving capture...")
         time_prefix = time.strftime("%Y%m%d%H%M%S")
         cv2.imwrite(time_prefix + "_depth.png", self._depth_image)
@@ -63,6 +71,7 @@ class Visualizer:
         print("Saving capture Done")
 
     def on_press(self, event):
+        "control with keyboard"
         match event.key:
             case " ":  # switch to next frame
                 self.update_capture()

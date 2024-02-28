@@ -3,6 +3,7 @@ Basic operations based on sensor SDK tutorial
 https://learn.microsoft.com/zh-cn/azure/kinect-dk/about-sensor-sdk
 Note some code utilize pykinect_azure's wrapper instead of low level SDK
 """
+
 import cv2
 import matplotlib.pyplot as plt
 import pykinect_azure as pykinect
@@ -39,6 +40,7 @@ def image_data_operation():
 
     # Get a capture from the device
     capture = device.update()
+    assert capture is not None
 
     depth_image_object = capture.get_depth_image_object()
     print(
@@ -49,11 +51,11 @@ def image_data_operation():
         )
     )
 
-    ret, depth_image = depth_image_object.to_numpy()  # capture.get_depth_image()
+    ret, depth_image = depth_image_object.to_numpy()  # type: ignore # capture.get_depth_image()
     if not ret:
         return  # fail
 
-    plt.imshow(depth_image, cmap="plasma")
+    plt.imshow(depth_image, cmap="plasma")  # type: ignore
     plt.colorbar()
     plt.show()
 
@@ -68,6 +70,7 @@ def imu_data_operation():
 
     device = pykinect.start_device(config=device_config)
     imu_sample = device.update_imu()
+    assert imu_sample is not None
     print(
         " | Accelerometer temperature:{} x:{} y:{} z: {}".format(
             imu_sample.get_temp(), *imu_sample.get_acc()
@@ -88,9 +91,10 @@ def image_transform_operation():
 
     while True:  # color_image_to_depth_camera
         capture = device.update()
-        ret, color_image = capture.get_transformed_color_image()
+        ret, color_image = capture.get_transformed_color_image()  # type: ignore
         if not ret:  # first time will fail somehow, so try util `ret` is True
             continue
+        assert color_image is not None  # for type checker
         color_image[:, :, :3] = color_image[:, :, 2::-1]  # BGR to RGB
         plt.imshow(color_image)
         plt.axis("off")
@@ -99,9 +103,10 @@ def image_transform_operation():
 
     while True:  # color_image_to_depth_camera
         capture = device.update()
-        ret, depth_image = capture.get_transformed_depth_image()
+        ret, depth_image = capture.get_transformed_depth_image()  # type: ignore
         if not ret:
             continue
+        assert depth_image is not None  # for type checker
         plt.imshow(depth_image, cmap="plasma")
         plt.colorbar()
         plt.show()
@@ -118,7 +123,8 @@ def playback_operation():
     # get image at 1s
     playback.seek_timestamp(1000)  # timestamps in microseconds
     ret, capture = playback.update()
-    ret_depth, depth_color_image = capture.get_colored_depth_image()
+    ret_depth, depth_color_image = capture.get_colored_depth_image()  # type: ignore
+    assert depth_color_image is not None  # for type checker
     plt.imshow(depth_color_image)
     plt.show()
 
@@ -130,9 +136,10 @@ def playback_operation():
         if not ret:
             break
         # Get the colored depth
-        ret, color_image = capture.get_color_image()
+        ret, color_image = capture.get_color_image()  # type: ignore
         if not ret:
             continue
+        assert color_image is not None  # for type checker
         # Plot the image
         cv2.imshow("Play Back", color_image)
 
