@@ -46,6 +46,7 @@ class Visualizer:
         ret_d, depth_image = capture.get_depth_image()  # type: ignore
         assert ret_c and ret_d, "capture is not valid"
         assert color_image is not None and depth_image is not None  # for type checker
+        self._depth_image_raw = depth_image
 
         # depth2rgb
         # alpha is fitted by visual comparison with Azure k4aviewer results
@@ -68,6 +69,7 @@ class Visualizer:
         time_prefix = time.strftime("%Y%m%d%H%M%S")
         cv2.imwrite(time_prefix + "_depth.png", self._depth_image)
         cv2.imwrite(time_prefix + "_color.png", self._color_image)
+        cv2.imwrite(time_prefix + "_depth_raw.png", self._depth_image_raw)
         print("Saving capture Done")
 
     def on_press(self, event):
