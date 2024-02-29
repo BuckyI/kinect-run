@@ -38,7 +38,7 @@ def depth2pcd(depth_image: str, width: int, height: int, intrinsic_params):
 
 
 if __name__ == "__main__":
-    depth_image = r"assets\20240228171418_depth_raw.png"
+    depth_image = r"assets\kinect_0107_5500000_depth_raw.png"
     video = r"data\kinect_0107.mkv"  # 视频文件没在 Git 里，可以使用 calibration.pickle instead
 
     calibration = get_depth_calibration(video)

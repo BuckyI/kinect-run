@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
 
-pcd = o3d.io.read_point_cloud(r"assets\20240229153411_point_cloud.pcd")
+pcd = o3d.io.read_point_cloud(r"assets\kinect_0107_164000000_pointcloud.pcd")
 pcd = pcd.voxel_down_sample(voxel_size=0.1)  # downsample
 visparam = {
     "lookat": np.array([0, 0, 0]),
