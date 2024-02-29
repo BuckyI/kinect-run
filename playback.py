@@ -16,10 +16,15 @@ import pykinect_azure as pykinect
 class Visualizer:
     def __init__(self, video_filename: str) -> None:
         # init kinect
+        self.video_name = video_filename.strip(".mkv")
         pykinect.initialize_libraries()
         self.playback = pykinect.start_playback(video_filename)
         self.playback_config = self.playback.get_record_configuration()
         print(self.playback_config)
+
+        # init control
+        self.video_length = self.playback.get_recording_length()  # in microsecond
+        self.timestamp = 0  # time of current frame, in microsecond
 
         # init plot
         self.fig, self.axes = plt.subplots(1, 2, figsize=(15, 5))
@@ -32,13 +37,18 @@ class Visualizer:
 
     def update_capture(self, reverse: bool = False):
         "update frames, reverse means previous frame"
-        update = self.playback.get_previous_capture if reverse else self.playback.update
-        res, capture = update()
-        if res:
-            assert capture is not None  # for type checker
-            self.capture = capture
-        else:
-            print("failed to update capture")
+        # update timestamp in 0.5s step
+        step: int = -500000 if reverse else 500000
+        self.timestamp += step
+        if self.timestamp > self.video_length or self.timestamp < 0:
+            print("timestamp out of range")
+            self.timestamp = min(max(self.timestamp, 0), self.video_length)
+
+        self.playback.seek_timestamp(self.timestamp)
+        res, capture = self.playback.update()
+        assert res, "failed to update capture"
+        assert capture is not None  # for type checker
+        self.capture = capture
 
     def plot_capture(self):
         "plot frames"
@@ -59,6 +69,9 @@ class Visualizer:
         ax1.imshow(color_image[:, :, ::-1])  # bgr2rgb
         ax2.imshow(depth_image[:, :, ::-1])
         self.fig.canvas.draw()
+        # set title to current time
+        timestr = time.strftime("%H:%M:%S", time.gmtime(self.timestamp / 1e6))
+        self.fig.suptitle("frame: " + timestr)
 
         # cache image
         self._depth_image = depth_image
@@ -85,22 +98,22 @@ class Visualizer:
     def save_capture(self):
         "save current frame to local"
         print("Saving capture...")
-        time_prefix = time.strftime("%Y%m%d%H%M%S")
-        cv2.imwrite(time_prefix + "_depth.png", self._depth_image)
-        cv2.imwrite(time_prefix + "_color.png", self._color_image)
-        cv2.imwrite(time_prefix + "_depth_raw.png", self._depth_image_raw)
-        o3d.io.write_point_cloud(time_prefix + "_pointcloud.pcd", self.get_pointcloud())
+        prefix = f"{self.video_name}_{self.timestamp}"
+        cv2.imwrite(prefix + "_depth.png", self._depth_image)
+        cv2.imwrite(prefix + "_color.png", self._color_image)
+        cv2.imwrite(prefix + "_depth_raw.png", self._depth_image_raw)
+        o3d.io.write_point_cloud(prefix + "_pointcloud.pcd", self.get_pointcloud())
         print("Saving capture Done")
 
     def on_press(self, event):
         "control with keyboard"
         match event.key:
-            case " ":  # switch to next frame
-                self.update_capture()
-                self.plot_capture()
-            case "right":  # fast forward to next frame
-                for _ in range(10):
+            case " ":
+                for _ in range(10):  # fast forward to next frame
                     self.update_capture()
+                self.plot_capture()
+            case "right":  # switch to next frame
+                self.update_capture()
                 self.plot_capture()
             case "left":  # switch to previous frame
                 self.update_capture(reverse=True)
