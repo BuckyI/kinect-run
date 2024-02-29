@@ -70,8 +70,14 @@ class Visualizer:
         assert ret
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(points)
-        pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        o3d.visualization.draw_geometries([pcd])
+        # pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+        o3d.visualization.draw_geometries(
+            [pcd],
+            lookat=np.array([0, 0, 0]),
+            up=np.array([0, -1, -0]),
+            front=np.array([0, 0, -1]),
+            zoom=0.5,
+        )
 
     def save_capture(self):
         "save current frame to local"
