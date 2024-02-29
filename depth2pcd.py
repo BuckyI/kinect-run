@@ -1,5 +1,6 @@
 """
 深度图转点云
+不过由于未知原因，这个方法获得的点云看起来存在畸变，推荐使用 capture.get_pointcloud()
 """
 
 import numpy as np
