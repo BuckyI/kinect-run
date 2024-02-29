@@ -64,13 +64,16 @@ class Visualizer:
         self._depth_image = depth_image
         self._color_image = color_image
 
-    def show_3d_points(self):
-        "展示当前帧的 3D 点云"
+    def get_pointcloud(self):
         ret, points = self.capture.get_pointcloud()
         assert ret
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(points)
-        # pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+        return pcd
+
+    def show_3d_points(self):
+        "展示当前帧的 3D 点云"
+        pcd = self.get_pointcloud()
         o3d.visualization.draw_geometries(
             [pcd],
             lookat=np.array([0, 0, 0]),
@@ -86,6 +89,7 @@ class Visualizer:
         cv2.imwrite(time_prefix + "_depth.png", self._depth_image)
         cv2.imwrite(time_prefix + "_color.png", self._color_image)
         cv2.imwrite(time_prefix + "_depth_raw.png", self._depth_image_raw)
+        o3d.io.write_point_cloud(time_prefix + "_pointcloud.pcd", self.get_pointcloud())
         print("Saving capture Done")
 
     def on_press(self, event):
