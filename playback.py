@@ -9,6 +9,7 @@ import time
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import open3d as o3d
 import pykinect_azure as pykinect
 
 
@@ -63,6 +64,15 @@ class Visualizer:
         self._depth_image = depth_image
         self._color_image = color_image
 
+    def show_3d_points(self):
+        "展示当前帧的 3D 点云"
+        ret, points = self.capture.get_pointcloud()
+        assert ret
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(points)
+        pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+        o3d.visualization.draw_geometries([pcd])
+
     def save_capture(self):
         "save current frame to local"
         print("Saving capture...")
@@ -87,6 +97,8 @@ class Visualizer:
                 self.plot_capture()
             case "w":
                 self.save_capture()
+            case "e":
+                self.show_3d_points()
             case "q":  # quit
                 self.fig.canvas.stop_event_loop()
             case _:
