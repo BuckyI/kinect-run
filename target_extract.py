@@ -20,7 +20,28 @@ def visualize(geometries: list[o3d.geometry.Geometry]):
     o3d.visualization.draw_geometries(geometries + [frame], **visparam)
 
 
-pcd = o3d.io.read_point_cloud(r"assets\kinect_0107_164000000_pointcloud.pcd")
+def select_points(pcd) -> list[int]:
+    """
+    1) pick at least one point using [shift + left click]
+        Press [shift + right click] to undo point picking
+    2) After picking points, press 'Q' to close the window
+    return the index of selected points
+    """
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window()
+    vis.add_geometry(pcd)
+
+    vis_ctrl = vis.get_view_control()
+    vis_ctrl.set_front(np.array([0, 0, -1]))
+    vis_ctrl.set_lookat(np.array([0, 0, 0]))
+    vis_ctrl.set_up(np.array([0, -1, 0]))
+
+    vis.run()  # user picks points
+    vis.destroy_window()
+    return vis.get_picked_points()
+
+
+pcd = o3d.io.read_point_cloud(r"assets\kinect_0107_15500000_pointcloud.pcd")
 pcd = pcd.voxel_down_sample(voxel_size=0.1)  # downsample
 
 visualize([pcd])
@@ -48,3 +69,14 @@ colors = plt.get_cmap("tab20")(labels / (max_label if max_label > 0 else 1))
 colors[labels < 0] = 0
 pcd.colors = o3d.utility.Vector3dVector(colors[:, :3])
 visualize([pcd])
+
+# manually select points to get target
+sample_idx = select_points(pcd)
+target_labels = np.unique(labels[sample_idx])  # 选中的点属于的类
+print(f"target labels: {target_labels}")
+target_idx = []
+for label in target_labels:
+    target_idx.extend(np.where(labels == label)[0])
+target = pcd.select_by_index(target_idx)
+target.paint_uniform_color([0, 0, 1])
+visualize([target])
