@@ -41,17 +41,14 @@ def evaluate_registration(
 
 def preprocess_point_cloud(pcd: o3d.geometry.PointCloud, voxel_size: float):
     "downsample the point cloud, and compute the FPFH feature"
-    print(":: Downsample with a voxel size%.3f." % voxel_size)
     pcd_down = pcd.voxel_down_sample(voxel_size)
 
     radius_normal = voxel_size * 2
-    print(":: Estimate normal with search radius%.3f." % radius_normal)
     pcd_down.estimate_normals(
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius_normal, max_nn=30)
     )
 
     radius_feature = voxel_size * 5
-    print(":: Compute FPFH feature with search radius%.3f." % radius_feature)
     pcd_fpfh: o3d.pipelines.registration.Feature = (
         o3d.pipelines.registration.compute_fpfh_feature(
             pcd_down,
@@ -75,7 +72,7 @@ def global_registration(
         distance_threshold,  # max_correspondence_distance
         # estimation_method
         o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
-        3,  # ransac_n: Fit ransac with ransac_n correspondences
+        5,  # ransac_n: Fit ransac with ransac_n correspondences
         # checkers: check if two point clouds can be aligned.
         [
             o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
@@ -234,6 +231,7 @@ class Model:
         # combination
         self.pcd += o3d.geometry.PointCloud(source).transform(result.transformation)
         self.pcd = self.pcd.voxel_down_sample(self.size2)
+        print(self.pcd)
 
 
 def registration_combination(pcd_paths: list[str]):
