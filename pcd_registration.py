@@ -165,7 +165,7 @@ def icp(
     return result
 
 
-if __name__ == "__main__":
+def simple_registration_combination():
     pcd_paths = [
         "assets/kinect_0107_2000000_pointcloud.pcd",
         "assets/kinect_0107_2500000_pointcloud.pcd",
@@ -200,3 +200,10 @@ if __name__ == "__main__":
     print(evaluate_registration(pcds[s], pcds[t], voxel_size))
     print(result.transformation)
     draw_registration_result(pcds[s], pcds[t], result.transformation)
+
+    # combination
+    p1 = copy.deepcopy(pcds[s])
+    p2 = copy.deepcopy(pcds[t])
+    result_pcd = p2 + p1.transform(result.transformation)
+    result_pcd = result_pcd.voxel_down_sample(voxel_size=1)
+    visualize([result_pcd], title="combination")
