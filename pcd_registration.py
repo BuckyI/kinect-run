@@ -1,4 +1,5 @@
 import copy
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -207,3 +208,53 @@ def simple_registration_combination():
     result_pcd = p2 + p1.transform(result.transformation)
     result_pcd = result_pcd.voxel_down_sample(voxel_size=1)
     visualize([result_pcd], title="combination")
+
+
+class Model:
+    size1 = 50  # coarse_voxel_size
+    size2 = 1  # fine_voxel_size
+
+    def __init__(self, pcd) -> None:
+        self.pcd = pcd  # initial pcd
+
+    def merge(self, source):
+        target = self.pcd
+        # global registration
+        source_down, source_fpfh = preprocess_point_cloud(source, self.size1)
+        target_down, target_fpfh = preprocess_point_cloud(target, self.size1)
+        result = fast_global_registration(
+            source_down, source_fpfh, target_down, target_fpfh, self.size1
+        )
+        # local registration
+        result = icp(source, target, self.size1, result.transformation, "generalized")
+        # combination
+        self.pcd += o3d.geometry.PointCloud(source).transform(result.transformation)
+        self.pcd = self.pcd.voxel_down_sample(self.fine_voxel_size)
+
+
+def registration_combination(pcd_paths: list[str]):
+    colors = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0]]
+    pcds = [o3d.io.read_point_cloud(path) for path in pcd_paths]
+    for i in range(len(pcds)):
+        pcds[i] = pcds[i].remove_duplicated_points()
+        pcds[i] = pcds[i].paint_uniform_color(colors[i])
+        pcds[i] = pcds[i].voxel_down_sample(voxel_size=1)
+        pcds[i].estimate_normals(
+            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30)
+        )
+    visualize(pcds, title="load point cloud")
+
+    model = Model(pcds[0])
+    for pcd in pcds[1:]:  # merge
+        model.merge(pcd)
+        visualize([model.pcd], title="combination")
+
+
+if __name__ == "__main__":
+    pcd_paths = [
+        "assets/kinect_0107_2000000_pointcloud.pcd",
+        "assets/kinect_0107_2500000_pointcloud.pcd",
+        "assets/kinect_0107_3000000_pointcloud.pcd",
+        "assets/kinect_0107_3500000_pointcloud.pcd",
+    ]
+    registration_combination(pcd_paths)
