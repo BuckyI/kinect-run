@@ -229,11 +229,14 @@ class Model:
         result = icp(source, target, self.size1, result.transformation, "generalized")
         # combination
         self.pcd += o3d.geometry.PointCloud(source).transform(result.transformation)
-        self.pcd = self.pcd.voxel_down_sample(self.fine_voxel_size)
+        self.pcd = self.pcd.voxel_down_sample(self.size2)
 
 
 def registration_combination(pcd_paths: list[str]):
-    colors = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0]]
+    # colors = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0]]
+    idx = np.arange(len(pcd_paths)) / (len(pcd_paths) - 1)
+    colors = plt.get_cmap("coolwarm")(idx)[:, :3]
+
     pcds = [o3d.io.read_point_cloud(path) for path in pcd_paths]
     for i in range(len(pcds)):
         pcds[i] = pcds[i].remove_duplicated_points()
