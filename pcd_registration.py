@@ -1,3 +1,7 @@
+"""
+对齐两个或多个点云，并融合在一起
+"""
+
 import copy
 from pathlib import Path
 
