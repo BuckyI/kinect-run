@@ -5,7 +5,7 @@ import numpy as np
 import open3d as o3d
 
 
-def visualize(geometries: list[o3d.geometry.Geometry]):
+def visualize(geometries: list[o3d.geometry.Geometry], *, title="Open3D"):
     # transform to camera coordinate
     visparam = {
         "lookat": np.array([0, 0, 0]),
@@ -14,7 +14,7 @@ def visualize(geometries: list[o3d.geometry.Geometry]):
         "zoom": 0.5,
     }
     frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=30, origin=[0, 0, 0])
-    o3d.visualization.draw_geometries(geometries + [frame], **visparam)
+    o3d.visualization.draw_geometries(geometries + [frame], title, **visparam)
 
 
 def select_points(pcd) -> list[int]:
