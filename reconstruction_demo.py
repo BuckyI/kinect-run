@@ -23,8 +23,8 @@ listener.start()
 
 
 pcds = (
-    p.voxel_down_sample(voxel_size=1).paint_uniform_color([1, 0.706, 0])
-    for p in point_cloud_from_video("data/kinect_0107.mkv", 100000)
+    p.paint_uniform_color([1, 0.706, 0])
+    for p in point_cloud_from_video("data/kinect_0107.mkv", 100000, voxel_size=1)
 )
 
 init = next(pcds)
