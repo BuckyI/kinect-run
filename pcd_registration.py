@@ -123,17 +123,17 @@ def icp(
                 source,
                 target,
                 distance_threshold,  # max_correspondence_distance
-                o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                 init,  # Initial transformation estimation
+                o3d.pipelines.registration.TransformationEstimationPointToPoint(),
                 # o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=4000)
             )
         case "point_to_plane":
             result = o3d.pipelines.registration.registration_icp(
                 source,
                 target,
-                distance_threshold,  # max_correspondence_distance
-                o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+                distance_threshold,
                 init,  # Initial transformation estimation
+                o3d.pipelines.registration.TransformationEstimationPointToPlane(),
             )
         case "robust":  # Robust ICP
             sigma = 0.5  # standard deviation of noise
@@ -258,4 +258,9 @@ if __name__ == "__main__":
         "assets/kinect_0107_3000000_pointcloud.pcd",
         "assets/kinect_0107_3500000_pointcloud.pcd",
     ]
+    # from pathlib import Path
+
+    # path = Path("assets")
+    # pcd_paths = [str(p) for p in path.glob("kinect_0107_*.pcd")]
+
     registration_combination(pcd_paths)
