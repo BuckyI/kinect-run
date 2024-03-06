@@ -115,11 +115,7 @@ def icp(
     distance_threshold = voxel_size * 0.4
 
     # compute normals
-    without_normals = filter(lambda x: not x.has_normals(), [source, target])
-    for p in without_normals:
-        p.estimate_normals(
-            o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30)
-        )
+    assert all(x.has_normals() for x in [source, target])
 
     match icp_method:
         case "point_to_point":
@@ -181,7 +177,7 @@ def simple_registration_combination():
         pcds[i] = pcds[i].paint_uniform_color(colors[i])
         pcds[i] = pcds[i].voxel_down_sample(voxel_size=1)
         pcds[i].estimate_normals(
-            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30)
+            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=50, max_nn=50)
         )
     visualize(pcds, title="load point cloud")
 
@@ -245,7 +241,7 @@ def registration_combination(pcd_paths: list[str]):
         pcds[i] = pcds[i].paint_uniform_color(colors[i])
         pcds[i] = pcds[i].voxel_down_sample(voxel_size=1)
         pcds[i].estimate_normals(
-            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30)
+            search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=50, max_nn=50)
         )
     visualize(pcds, title="load point cloud")
 
