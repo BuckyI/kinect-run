@@ -9,12 +9,13 @@ import pykinect_azure as pykinect
 
 
 def point_cloud_from_video(
-    filename: str, timestep: int = 500000
+    filename: str, timestep: int = 500000, voxel_size: float = 1
 ) -> Generator[o3d.geometry.PointCloud, None, None]:
     """
     从视频中提取点云
     filename: mkv 文件
     timestap: 间隔一定时间取一帧，单位为微秒，默认 0.5s
+    voxel_size: 原始点云进行降采样的体素大小，默认为 1(mm)
     """
     pykinect.initialize_libraries()
     playback = pykinect.start_playback(filename)
@@ -31,5 +32,13 @@ def point_cloud_from_video(
 
                 # preprocess
                 pcd = pcd.remove_duplicated_points()
+                pcd = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2)[0]
+                pcd.estimate_normals(
+                    search_param=o3d.geometry.KDTreeSearchParamHybrid(
+                        radius=50,  # 5cm 搜索半径 for kinect point cloud
+                        max_nn=50,
+                    )
+                )
+                pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
                 yield pcd
         timestamp += timestep
