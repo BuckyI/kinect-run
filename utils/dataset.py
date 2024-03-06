@@ -9,7 +9,7 @@ import pykinect_azure as pykinect
 
 
 def point_cloud_from_video(
-    filename: str, timestep: int = 250000
+    filename: str, timestep: int = 500000
 ) -> Generator[o3d.geometry.PointCloud, None, None]:
     """
     从视频中提取点云
