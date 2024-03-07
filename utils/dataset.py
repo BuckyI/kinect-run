@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 from typing import Generator
 
 import cv2
@@ -32,13 +33,26 @@ def point_cloud_from_video(
 
                 # preprocess
                 pcd = pcd.remove_duplicated_points()
+                pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
                 pcd = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2)[0]
                 pcd.estimate_normals(
                     search_param=o3d.geometry.KDTreeSearchParamHybrid(
                         radius=50,  # 5cm 搜索半径 for kinect point cloud
-                        max_nn=50,
+                        max_nn=5,
                     )
                 )
-                pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
                 yield pcd
         timestamp += timestep
+
+
+def point_cloud_from_folder(
+    path: str,
+) -> Generator[o3d.geometry.PointCloud, None, None]:
+    """
+    从文件夹中逐个提取点云
+    folder: 文件夹路径
+    """
+    folder = Path(path)
+    assert folder.exists() and folder.is_dir()
+    for f in sorted(folder.glob("*.pcd")):
+        yield o3d.io.read_point_cloud(str(f))
