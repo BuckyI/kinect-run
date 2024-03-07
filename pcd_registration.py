@@ -135,6 +135,7 @@ def icp(
                 distance_threshold,
                 init,  # Initial transformation estimation
                 o3d.pipelines.registration.TransformationEstimationPointToPlane(),
+                o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=100),
             )
         case "robust":  # Robust ICP
             sigma = 0.5  # standard deviation of noise
