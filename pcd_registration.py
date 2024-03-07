@@ -17,6 +17,7 @@ def draw_registration_result(
     source: o3d.geometry.PointCloud,
     target: o3d.geometry.PointCloud,
     transformation,
+    title: str = "registration result",
 ):
     "transformation: 4x4 matrix"
     source_temp = copy.deepcopy(source)
@@ -25,7 +26,7 @@ def draw_registration_result(
     target_temp.paint_uniform_color([0, 0.651, 0.929])
     source_temp.transform(transformation)
 
-    visualize([source_temp, target_temp], title="registration result")
+    visualize([source_temp, target_temp], title=title)
 
 
 def evaluate_registration(
@@ -112,7 +113,7 @@ def icp(
     """
     init: Initial transformation 4x4 matrix
     """
-    distance_threshold = voxel_size * 0.4
+    distance_threshold = voxel_size * 1.4
 
     # compute normals
     assert all(x.has_normals() for x in [source, target])
@@ -153,9 +154,9 @@ def icp(
                 distance_threshold,
                 init,
                 o3d.pipelines.registration.TransformationEstimationForGeneralizedICP(),
-                # o3d.pipelines.registration.ICPConvergenceCriteria(
-                #     relative_fitness=1e-6, relative_rmse=1e-6, max_iteration=30
-                # ),
+                o3d.pipelines.registration.ICPConvergenceCriteria(
+                    relative_fitness=1e-6, relative_rmse=1e-6, max_iteration=30
+                ),
             )
         case _:
             raise ValueError(f"unknown icp_method: {icp_method}")
