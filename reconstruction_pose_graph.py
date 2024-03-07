@@ -15,7 +15,8 @@ from utils.visual import visualize
 def pairwise_registration(source, target):
     global voxel_size, max_correspondence_distance_fine
     trans = np.identity(4)
-    for v in [voxel_size * 15, voxel_size * 5, voxel_size * 1.5]:
+    for v in [15, 5, 1.5]:
+        v = voxel_size * v
         result = icp(
             source.voxel_down_sample(v),
             target.voxel_down_sample(v),
@@ -77,6 +78,7 @@ def full_registration(pcds: list[o3d.geometry.PointCloud]):
 
 
 if __name__ == "__main__":
+    # pcds_g = point_cloud_from_folder("data/kinect_0107/")
     pcds_g = point_cloud_from_video("data/kinect_0107.mkv", 100000, 5)
     pcds = []
     for _ in tqdm(range(20), desc="load point cloud"):
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     print("Optimizing PoseGraph ...")
     option = o3d.pipelines.registration.GlobalOptimizationOption(
         max_correspondence_distance=max_correspondence_distance_fine,
-        edge_prune_threshold=50,  # 0.25,
+        edge_prune_threshold=0.25,
         preference_loop_closure=2.0,  # 2.0 for fragment registration.
         reference_node=0,
     )
