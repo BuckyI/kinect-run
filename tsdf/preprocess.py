@@ -1,5 +1,6 @@
 "mkv -> depth, color"
 import argparse
+import json
 from pathlib import Path
 from typing import Generator, NamedTuple
 
@@ -34,6 +35,23 @@ def frame_from_video(filename: str) -> Generator[Frame, None, None]:
         yield Frame(depth, color)  # type: ignore
 
 
+def intrinsic(filename: str) -> dict:
+    pykinect.initialize_libraries()
+    playback = pykinect.start_playback(filename)
+    calibration = playback.get_calibration()
+    # see: https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/examples/calibration/main.cpp#L79-L80
+    return {
+        "width": calibration._handle.color_camera_calibration.resolution_width,  # type: ignore
+        "height": calibration._handle.color_camera_calibration.resolution_height,  # type: ignore
+        "intrinsic_params": {
+            "cx": calibration.color_params.cx,
+            "cy": calibration.color_params.cy,
+            "fx": calibration.color_params.fx,
+            "fy": calibration.color_params.fy,
+        },
+    }
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", type=str)
@@ -50,6 +68,7 @@ if __name__ == "__main__":
         d.mkdir(parents=True)
 
     # output
+    json.dump(intrinsic(args.filename), open(output_dir / "intrinsic.json", "w"))
     for idx, frame in enumerate(frame_from_video(args.filename)):
         filename = f"{idx:04}.png"
         cv2.imwrite(str(color_dir / filename), frame.color)
